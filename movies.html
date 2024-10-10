@@ -1,20 +1,82 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Movies</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
 <body>
-    
-    <h1>Hola mundo</h1>
+  <div id="app">
+    <div class="header">
+      <div class="logout-button">
+          <button @click="logout">Log Out</button>
+      </div>
+    </div>
 
-<script>
-  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-  if (isLoggedIn) {
-  } else {
-    window.location.href = "index.html";
-  }
-</script>
+    <div class="movies-container">
+      <div class="book" v-for="movie in movies" :key="movie.id" @click="goToMovie(movie.id)">
+        <div class="movie-info">
+          <p class="movie-title">{{ movie.title }}</p>
+          <p class="movie-details">Fecha: {{ movie.release_date }}</p>
+          <p class="movie-details">Rating: {{ movie.vote_average }}/10</p>
+        </div>
+        <div class="cover">
+          <img :src="'https://image.tmdb.org/t/p/w440_and_h660_face/' + movie.poster_path" alt="Movie Cover">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script>
+    const { createApp, ref, onMounted } = Vue;
+
+    createApp({
+      setup() {
+        const isLoggedIn = ref(localStorage.getItem("isLoggedIn") === "true");
+        const movies = ref([]);
+
+        const logout = () => {
+          localStorage.removeItem("isLoggedIn");
+          window.location.href = "index.html";
+        };
+
+        const goToMovie = (movieId) => {
+          localStorage.setItem("selectedMovieId", movieId);
+          window.location.href = "movie.html";
+        };
+
+        onMounted(() => {
+          if (!isLoggedIn.value) {
+            window.location.href = "index.html";
+          }
+
+          const myHeaders = new Headers();
+          myHeaders.append("Authorization", "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlNTY3YTU0ZGQ4YTIwMmQzMGMwZjM4Njk4MGVkNTlhYSIsIm5iZiI6MTcyODQ5OTUzNy45NTkwMjMsInN1YiI6IjY3MDYyMzMwN2UzY2VlN2QzZjljYmU2YyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.WC1Uvzg2D2mD-gVcxaHeaWeYyb_lJN76S97C5bG1Lgk");
+
+          const requestOptions = {
+            method: "GET",
+            headers: myHeaders,
+            redirect: "follow"
+          };
+
+          fetch("https://api.themoviedb.org/3/discover/movie?language=es-ES", requestOptions)
+            .then((response) => response.json())
+            .then((result) => {
+              movies.value = result.results;
+            })
+            .catch((error) => console.error("Error al obtener las películas:", error));
+        });
+
+        return {
+          isLoggedIn,
+          movies,
+          logout,
+          goToMovie
+        };
+      }
+    }).mount('#app');
+  </script>
 </body>
 </html>
