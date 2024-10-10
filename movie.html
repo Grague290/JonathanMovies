@@ -5,47 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Movie Details</title>
     <link rel="stylesheet" type="text/css" href="styles.css">
-    <style>
-        .movie-details-container {
-            padding: 20px;
-            max-width: 800px;
-            margin: auto;
-        }
-        .movie-poster {
-            width: 100%;
-            max-width: 400px;
-            margin-bottom: 20px;
-            border-radius: 10px;
-            box-shadow: 1px 1px 12px #000;
-        }
-        .movie-title {
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .movie-info {
-            font-size: 16px;
-            margin-bottom: 10px;
-        }
-        .movie-overview {
-            font-size: 16px;
-            line-height: 1.6;
-        }
-        .rating-section {
-            margin-top: 20px;
-        }
-        .rating-section input[type="number"] {
-            width: 60px;
-            padding: 5px;
-            font-size: 16px;
-        }
-        .rating-section button {
-            padding: 5px 10px;
-            font-size: 16px;
-            margin-left: 10px;
-            cursor: pointer;
-        }
-    </style>
 </head>
 <body>
   <div id="app" class="movie-details-container">
@@ -60,10 +19,11 @@
         <label for="userRating">Tu Rating:</label>
         <input type="number" id="userRating" v-model="userRating" min="1" max="10" />
         <button @click="rateMovie">Guardar Rating</button>
+        <button @click="deleteRating" class="delete-rating-button">Borrar Rating</button>
       </div>
       <div v-if="userRating">
         <p>Tu rating guardado: {{ userRating }}/10</p>
-      </div>
+      </div>      
     </div>
     <div v-else>
       <p>Cargando detalles de la película...</p>
@@ -73,13 +33,13 @@
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <script>
     const { createApp, ref, onMounted } = Vue;
-
+  
     createApp({
       setup() {
         const movie = ref(null);
         const movieId = localStorage.getItem("selectedMovieId");
         const userRating = ref(null);
-
+  
         const rateMovie = () => {
           if (userRating.value < 1 || userRating.value > 10) {
             alert("Por favor, ingresa un rating entre 1 y 10.");
@@ -88,27 +48,33 @@
           localStorage.setItem(`rating_${movieId}`, userRating.value);
           alert(`Has guardado un rating de ${userRating.value}/10 para la película.`);
         };
-
+  
+        const deleteRating = () => {
+          localStorage.removeItem(`rating_${movieId}`);
+          userRating.value = null;
+          alert("Has borrado tu rating para esta película.");
+        };
+  
         onMounted(() => {
           if (!movieId) {
             window.location.href = "movies.html";
             return;
           }
-
+  
           const savedRating = localStorage.getItem(`rating_${movieId}`);
           if (savedRating) {
             userRating.value = savedRating;
           }
-
+  
           const myHeaders = new Headers();
           myHeaders.append("Authorization", "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlNTY3YTU0ZGQ4YTIwMmQzMGMwZjM4Njk4MGVkNTlhYSIsIm5iZiI6MTcyODQ5OTUzNy45NTkwMjMsInN1YiI6IjY3MDYyMzMwN2UzY2VlN2QzZjljYmU2YyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.WC1Uvzg2D2mD-gVcxaHeaWeYyb_lJN76S97C5bG1Lgk");
-
+  
           const requestOptions = {
             method: "GET",
             headers: myHeaders,
             redirect: "follow"
           };
-
+  
           fetch(`https://api.themoviedb.org/3/movie/${movieId}?language=es-ES`, requestOptions)
             .then((response) => response.json())
             .then((result) => {
@@ -116,14 +82,15 @@
             })
             .catch((error) => console.error("Error al obtener los detalles de la película:", error));
         });
-
+  
         return {
           movie,
           userRating,
-          rateMovie
+          rateMovie,
+          deleteRating
         };
       }
     }).mount('#app');
-  </script>
+  </script>  
 </body>
 </html>
